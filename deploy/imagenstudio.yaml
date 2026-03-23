@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: imagenstudio-frontend:latest
+    networks:
+      - iagenteknet
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.imagenstudio.entrypoints=websecure"
+        - "traefik.http.routers.imagenstudio.rule=Host(`imagenstudio.iagentek.com.mx`)"
+        - "traefik.http.routers.imagenstudio.service=imagenstudio"
+        - "traefik.http.routers.imagenstudio.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.imagenstudio.loadbalancer.server.port=80"
+
+  backend:
+    image: imagenstudio-backend:latest
+    networks:
+      - iagenteknet
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PORT=8080
+      - ALLOWED_ORIGINS=https://imagenstudio.iagentek.com.mx
+      - IMAGE_MODEL=dall-e-3
+      - IMAGE_SIZE=1024x1024
+      - IMAGE_QUALITY=standard
+      - NODE_ENV=production
+      - SUPABASE_URL=https://iagenteksupabase.iagentek.com.mx
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.imagenstudio-api.entrypoints=websecure"
+        - "traefik.http.routers.imagenstudio-api.rule=Host(`imagenstudio.iagentek.com.mx`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.imagenstudio-api.service=imagenstudio-api"
+        - "traefik.http.routers.imagenstudio-api.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.imagenstudio-api.loadbalancer.server.port=8080"
+
+networks:
+  iagenteknet:
+    external: true

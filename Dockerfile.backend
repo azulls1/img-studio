@@ -1,0 +1,17 @@
+# Stage 1: Compile TS to JS
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY proxy/ ./proxy/
+RUN npx tsc -p proxy/tsconfig.json
+
+# Stage 2: Production
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts --omit=dev
+COPY --from=build /app/proxy/dist/ ./dist/
+ENV NODE_ENV=production
+EXPOSE 8080
+CMD ["node", "dist/server.js"]

@@ -1,1 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+/* Forest Design System — imported before Tailwind to avoid @import order warnings */
+@import "./forest-ds/forest-theme.css";
+@import "./forest-ds/forest-layout.css";
+@import "./forest-ds/forest-components.css";
+@import "./forest-ds/forest-utilities.css";
+@import "./forest-ds/forest-animations.css";
+@import "./forest-ds/forest-print.css";
+@import "./forest-ds/forest-dark-surface.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, app-root { height: 100%; }

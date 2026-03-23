@@ -40,3 +40,37 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Security - Environment files
+.env
+.env.local
+.env.production
+.env.development
+.env.staging
+
+# Security - API Keys and secrets
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+credentials.json
+config.json
+
+# Security - Logs with sensitive data
+*.log
+logs/
+log/
+
+# Security - Build artifacts with potential sensitive info
+/build
+*.map
+
+# Security - Backup files
+*.bak
+*.backup
+*.old
+
+# Security - Temporary files
+*.tmp
+*.temp

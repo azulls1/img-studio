@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",                // ← Target moderno
+    "module": "CommonJS",              // ← Módulo para Node
+    "esModuleInterop": true,           // ← Interop default
+    "skipLibCheck": true,              // ← Agiliza build
+    "strict": true,                    // ← Tipado estricto
+    "outDir": "./dist"                 // ← Salida
+  },
+  "include": ["server.ts"]
+}
+

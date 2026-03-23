@@ -1,59 +1,221 @@
-# ImagegenUi
+# Generador de Imágenes - Angular + Tailwind + n8n
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.17.
+Una aplicación SPA desarrollada en Angular 19 que permite generar imágenes mediante prompts de texto utilizando un webhook de n8n.
 
-## Development server
+## 🚀 Características
 
-To start a local development server, run:
+- **Angular 19** con componentes standalone
+- **Tailwind CSS** para estilos modernos y responsivos
+- **Paleta IAgentek** (navy #0A1833, dorado #D4AF37, blanco #FFFFFF)
+- **Formularios reactivos** con validaciones
+- **Manejo de estados** (loading, error, éxito)
+- **Gestión de memoria** con liberación automática de blobs
+- **Proxy opcional** para evitar problemas de CORS
+- **Comentarios inline** en español en todo el código
 
+## 📋 Requisitos
+
+- Node.js 20.x o 22.x LTS
+- npm 10.x o superior
+- Angular CLI 19
+
+## 🛠️ Instalación
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone <repository-url>
+   cd imagegen-ui
+   ```
+
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
+
+3. **Configurar variables de entorno:**
+   - Editar `src/environments/environment.development.ts` para desarrollo
+   - Editar `src/environments/environment.ts` para producción
+
+## 🚀 Uso
+
+### Desarrollo
 ```bash
+# Iniciar servidor de desarrollo
+ng serve
+
+# Abrir en navegador
+ng serve -o
+```
+
+### Proxy (opcional, si hay problemas de CORS)
+```bash
+# Crear archivo .env basado en env.example
+cp env.example .env
+
+# Iniciar proxy en terminal separado
+npm run proxy:dev
+
+# Iniciar Angular en otra terminal
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### Producción
 ```bash
-ng generate component component-name
+# Build de producción
+ng build --configuration production
+
+# Los archivos se generan en dist/imagegen-ui/
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🔧 Configuración
 
-```bash
-ng generate --help
+### Variables de entorno
+
+```typescript
+export const environment = {
+  production: false,
+  WEBHOOK_URL: "https://devwebhook.personalizzimo.com/webhook/47c53930-2d1d-4705-b727-befe937e88da",
+  USE_PROXY: false,
+  PROXY_PATH: "/api/generate-image",
+  REQUEST_TIMEOUT_MS: 60000,
+  MAX_PROMPT_LENGTH: 1200,
+};
 ```
 
-## Building
+### Proxy Node/Express
 
-To build the project run:
+Si necesitas usar el proxy para evitar CORS:
 
+1. **Instalar dependencias del proxy:**
+   ```bash
+   npm install express axios cors dotenv
+   npm install -D ts-node typescript @types/node @types/express
+   ```
+
+2. **Configurar variables:**
+   ```bash
+   # Crear .env basado en env.example
+   WEBHOOK_URL=https://devwebhook.personalizzimo.com/webhook/47c53930-2d1d-4705-b727-befe937e88da
+   PORT=8080
+   ```
+
+3. **Cambiar configuración:**
+   ```typescript
+   // En environment.development.ts
+   USE_PROXY: true
+   ```
+
+## 📁 Estructura del proyecto
+
+```
+src/
+├── app/
+│   ├── app/
+│   │   ├── components/
+│   │   │   └── image-generator.component.ts    # Componente principal
+│   │   └── services/
+│   │       └── image.service.ts                # Servicio HTTP
+│   └── main.ts                                 # Bootstrap de la app
+├── environments/
+│   ├── environment.ts                          # Config producción
+│   └── environment.development.ts              # Config desarrollo
+└── styles.css                                  # Estilos globales Tailwind
+```
+
+## 🎨 Personalización
+
+### Colores de marca
+
+Los colores IAgentek están definidos en `tailwind.config.js`:
+
+```javascript
+theme: {
+  extend: {
+    colors: {
+      ianavy: "#0A1833",  // Azul marino
+      iagold: "#D4AF37",  // Dorado metálico
+    },
+  },
+}
+```
+
+### Validaciones
+
+- **Prompt requerido:** Mínimo 5 caracteres
+- **Límite máximo:** 1200 caracteres
+- **Timeout:** 60 segundos
+- **Contador visual:** Cambia de color según el uso (gris → amarillo → rojo)
+
+## 🔒 Seguridad
+
+- **Sanitización de URLs:** Usa `DomSanitizer` para URLs de blobs
+- **Gestión de memoria:** Libera automáticamente `ObjectURL`s
+- **Timeouts:** Evita requests colgados
+- **Validación de entrada:** Sanitiza prompts del usuario
+
+## 🚀 Despliegue
+
+### Estático (Netlify/Vercel)
+1. Hacer build: `ng build --configuration production`
+2. Subir carpeta `dist/imagegen-ui/` al servicio
+3. Configurar variables de entorno en el servicio
+
+### Con proxy
+1. Desplegar tanto Angular como el proxy Node
+2. Usar reverse proxy (Nginx) para `/api/generate-image`
+3. Configurar `USE_PROXY: true` en producción
+
+## 🐛 Solución de problemas
+
+### Error de CORS
 ```bash
+# Activar proxy
+npm run proxy:dev
+# Cambiar USE_PROXY: true en environment
+```
+
+### Tailwind no funciona
+```bash
+# Verificar configuración
+tailwind.config.js y postcss.config.js
+```
+
+### Build falla
+```bash
+# Limpiar caché
+rm -rf node_modules dist
+npm install
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## 📝 API del webhook
 
-## Running unit tests
+### Request
+```json
+POST https://devwebhook.personalizzimo.com/webhook/47c53930-2d1d-4705-b727-befe937e88da
+Content-Type: application/json
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+{
+  "prompt": "Crea una imagen de un perro viajando hacia la luna con gafas de sol"
+}
 ```
 
-## Running end-to-end tests
+### Response
+- **Content-Type:** `image/png`, `image/jpeg`, etc.
+- **Body:** Binario de la imagen generada
 
-For end-to-end (e2e) testing, run:
+## 🤝 Contribución
 
-```bash
-ng e2e
-```
+1. Fork el proyecto
+2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Crear Pull Request
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## 📄 Licencia
 
-## Additional Resources
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## 👥 Autor
+
+Desarrollado con ❤️ usando Angular 19, Tailwind CSS y n8n.
