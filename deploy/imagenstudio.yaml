@@ -9,11 +9,19 @@ services:
       replicas: 1
       labels:
         - "traefik.enable=true"
+        # HTTPS
         - "traefik.http.routers.imagenstudio.entrypoints=websecure"
         - "traefik.http.routers.imagenstudio.rule=Host(`imagenstudio.iagentek.com.mx`)"
         - "traefik.http.routers.imagenstudio.service=imagenstudio"
+        - "traefik.http.routers.imagenstudio.tls=true"
         - "traefik.http.routers.imagenstudio.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.imagenstudio.loadbalancer.server.port=80"
+        # HTTP -> HTTPS redirect
+        - "traefik.http.routers.imagenstudio-http.entrypoints=web"
+        - "traefik.http.routers.imagenstudio-http.rule=Host(`imagenstudio.iagentek.com.mx`)"
+        - "traefik.http.routers.imagenstudio-http.middlewares=imagenstudio-redirect"
+        - "traefik.http.middlewares.imagenstudio-redirect.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.imagenstudio-redirect.redirectscheme.permanent=true"
 
   api:
     image: imagenstudio-api:latest
