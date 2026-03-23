@@ -98,7 +98,7 @@ def remove_image(image_id: str):
     return {"success": True}
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health():
     return {
         "status": "ok",
