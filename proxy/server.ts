@@ -46,7 +46,7 @@ if (!OPENAI_API_KEY) {
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 // Helper: upload image to Supabase Storage + insert metadata
-async function saveToSupabase(buffer: Buffer, prompt: string): Promise<{ id: string; url: string } | null> {
+async function saveToSupabase(buffer: Buffer, prompt: string, sessionId: string): Promise<{ id: string; url: string } | null> {
   if (!SUPABASE_SERVICE_KEY) {
     console.log('SUPABASE_SERVICE_KEY not set, skipping storage');
     return null;
@@ -90,6 +90,7 @@ async function saveToSupabase(buffer: Buffer, prompt: string): Promise<{ id: str
         prompt,
         file_path: filePath,
         file_size: buffer.length,
+        session_id: sessionId,
       }),
     });
 
@@ -110,11 +111,15 @@ async function saveToSupabase(buffer: Buffer, prompt: string): Promise<{ id: str
 
 app.post('/api/generate-image', async (req: Request, res: Response) => {
   try {
-    const { prompt } = req.body as { prompt?: string };
+    const { prompt, session_id } = req.body as { prompt?: string; session_id?: string };
 
     // Input validation
     if (!prompt || typeof prompt !== 'string') {
       res.status(400).json({ error: 'Prompt is required and must be a string.' });
+      return;
+    }
+    if (!session_id) {
+      res.status(400).json({ error: 'session_id is required.' });
       return;
     }
 
@@ -144,8 +149,8 @@ app.post('/api/generate-image', async (req: Request, res: Response) => {
 
     const buffer = Buffer.from(b64, 'base64');
 
-    // Save to Supabase (non-blocking for response)
-    const saved = await saveToSupabase(buffer, trimmed);
+    // Save to Supabase
+    const saved = await saveToSupabase(buffer, trimmed, session_id);
 
     // Return JSON with image URL and metadata
     if (saved) {
@@ -187,16 +192,22 @@ app.post('/api/generate-image', async (req: Request, res: Response) => {
   }
 });
 
-// Get all images
-app.get('/api/images', async (_req: Request, res: Response) => {
+// Get images by session
+app.get('/api/images', async (req: Request, res: Response) => {
   if (!SUPABASE_SERVICE_KEY) {
+    res.json([]);
+    return;
+  }
+
+  const sessionId = req.query.session_id as string;
+  if (!sessionId) {
     res.json([]);
     return;
   }
 
   try {
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/iagentek_imgstudio_images?order=created_at.desc`,
+      `${SUPABASE_URL}/rest/v1/iagentek_imgstudio_images?session_id=eq.${sessionId}&order=created_at.desc`,
       {
         headers: {
           'apikey': SUPABASE_SERVICE_KEY,
