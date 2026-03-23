@@ -9,7 +9,7 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="page page-wide">
+    <div class="page" style="max-width: 1024px; margin: 0 auto">
       <!-- Hero -->
       <div class="card-hero mb-6 animate-fadeIn">
         <h2 class="card-hero__title">Generador de Imagenes IA</h2>
@@ -96,7 +96,7 @@ import { Subscription } from 'rxjs';
             {{ visibleImages().length }} imagen{{ visibleImages().length !== 1 ? 'es' : '' }}
           </span>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px" class="stagger-children">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px" class="stagger-children">
           <div
             *ngFor="let item of visibleImages(); let i = index"
             class="card cursor-pointer hover-lift animate-fadeIn"
@@ -167,16 +167,16 @@ import { Subscription } from 'rxjs';
          class="overlay animate-fadeIn"
          role="dialog" aria-modal="true" aria-label="Vista previa de imagen"
          (click)="closePreview()"
-         style="z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px">
+         style="z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px">
       <div class="animate-scaleIn"
-           style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center"
+           style="position: relative; width: 100%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; align-items: center"
            (click)="$event.stopPropagation()">
         <!-- Close button -->
         <button
           class="btn btn-icon"
           (click)="closePreview()"
           aria-label="Cerrar vista previa"
-          style="position: absolute; top: -16px; right: -16px; z-index: 10; background: white; border-radius: 9999px; width: 36px; height: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.15)">
+          style="position: absolute; top: 8px; right: 8px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 9999px; width: 36px; height: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.15)">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -186,23 +186,43 @@ import { Subscription } from 'rxjs';
         <img
           [src]="gallery.images()[previewIndex()!].url"
           [alt]="gallery.images()[previewIndex()!].prompt"
-          style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: var(--radius-lg); box-shadow: 0 16px 48px rgba(0,0,0,0.3)"
+          style="width: 100%; max-height: 65vh; object-fit: contain; border-radius: var(--radius-lg); box-shadow: 0 16px 48px rgba(0,0,0,0.3)"
           />
+
+        <!-- Navigation arrows (inside image area) -->
+        <button *ngIf="previewIndex()! > 0"
+                class="btn btn-icon"
+                (click)="previewIndex.set(previewIndex()! - 1); $event.stopPropagation()"
+                aria-label="Imagen anterior"
+                style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border-radius: 9999px; width: 36px; height: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.15)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <button *ngIf="previewIndex()! < gallery.count() - 1"
+                class="btn btn-icon"
+                (click)="previewIndex.set(previewIndex()! + 1); $event.stopPropagation()"
+                aria-label="Imagen siguiente"
+                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border-radius: 9999px; width: 36px; height: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.15)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
 
         <!-- Caption + actions -->
         <div class="glass-strong animate-fadeInUp"
-             style="margin-top: 16px; padding: 12px 20px; border-radius: var(--radius-lg); max-width: 600px; text-align: center">
-          <p style="font-size: 14px; color: var(--color-text-primary); margin: 0 0 8px 0; line-height: 1.5">
+             style="margin-top: 12px; padding: 10px 16px; border-radius: var(--radius-lg); width: 100%; text-align: center">
+          <p style="font-size: 13px; color: var(--color-text-primary); margin: 0 0 8px 0; line-height: 1.4">
             {{ gallery.images()[previewIndex()!].prompt }}
           </p>
           <div class="flex items-center justify-center gap-3">
-            <button class="btn btn-ghost" (click)="gallery.download(previewIndex()!)">
+            <button class="btn btn-ghost" style="font-size: 12px" (click)="gallery.download(previewIndex()!)">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
               </svg>
               Descargar
             </button>
-            <button class="btn btn-danger" (click)="confirmDelete(previewIndex()!); closePreview()">
+            <button class="btn btn-danger" style="font-size: 12px" (click)="confirmDelete(previewIndex()!); closePreview()">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
@@ -210,26 +230,6 @@ import { Subscription } from 'rxjs';
             </button>
           </div>
         </div>
-
-        <!-- Navigation arrows -->
-        <button *ngIf="previewIndex()! > 0"
-                class="btn btn-icon"
-                (click)="previewIndex.set(previewIndex()! - 1)"
-                aria-label="Imagen anterior"
-                style="position: absolute; left: -48px; top: 50%; transform: translateY(-50%); background: white; border-radius: 9999px; width: 40px; height: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.15)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </button>
-        <button *ngIf="previewIndex()! < gallery.count() - 1"
-                class="btn btn-icon"
-                (click)="previewIndex.set(previewIndex()! + 1)"
-                aria-label="Imagen siguiente"
-                style="position: absolute; right: -48px; top: 50%; transform: translateY(-50%); background: white; border-radius: 9999px; width: 40px; height: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.15)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-          </svg>
-        </button>
       </div>
     </div>
 

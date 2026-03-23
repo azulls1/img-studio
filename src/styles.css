@@ -12,3 +12,8 @@
 @tailwind utilities;
 
 html, body, app-root { height: 100%; }
+
+/* Override sidebar margin — this app has no sidebar */
+@media (min-width: 1024px) {
+  .app-main { margin-left: 0; }
+}
