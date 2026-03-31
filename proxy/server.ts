@@ -12,7 +12,7 @@ const app = express();
 app.use(helmet());
 
 // CORS - restrict to allowed origins
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:4200').split(',');
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3500').split(',');
 app.use(cors({ origin: ALLOWED_ORIGINS }));
 
 // Rate limiting - 20 requests per minute per IP
@@ -31,7 +31,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const IMAGE_MODEL = (process.env.IMAGE_MODEL || 'dall-e-3') as 'dall-e-2' | 'dall-e-3';
 const IMAGE_SIZE = (process.env.IMAGE_SIZE || '1024x1024') as '1024x1024' | '1024x1792' | '1792x1024' | '256x256' | '512x512';
 const IMAGE_QUALITY = (process.env.IMAGE_QUALITY || 'standard') as 'standard' | 'hd';
-const PORT = Number(process.env.PORT || 8080);
+const PORT = Number(process.env.PORT || 3501);
 const MAX_PROMPT_LENGTH = 1200;
 
 // Supabase config
