@@ -1,221 +1,174 @@
-# Generador de Imágenes - Angular + Tailwind + n8n
+# ImageGen Studio - Angular 19 + DALL-E 3 + FastAPI
 
-Una aplicación SPA desarrollada en Angular 19 que permite generar imágenes mediante prompts de texto utilizando un webhook de n8n.
+Aplicacion SPA para generar imagenes con IA mediante prompts de texto. Usa OpenAI DALL-E 3 como motor de generacion, FastAPI como backend, Celery + Redis para procesamiento asincrono y MinIO/Supabase para almacenamiento.
 
-## 🚀 Características
+## Arquitectura
 
-- **Angular 19** con componentes standalone
-- **Tailwind CSS** para estilos modernos y responsivos
-- **Paleta IAgentek** (navy #0A1833, dorado #D4AF37, blanco #FFFFFF)
-- **Formularios reactivos** con validaciones
-- **Manejo de estados** (loading, error, éxito)
-- **Gestión de memoria** con liberación automática de blobs
-- **Proxy opcional** para evitar problemas de CORS
-- **Comentarios inline** en español en todo el código
+```
+                    +-----------+
+                    |  Angular  |  :3500 (dev) / :80 (prod)
+                    +-----+-----+
+                          |
+                    +-----v-----+
+                    |  FastAPI   |  :8080
+                    +-----+-----+
+                          |
+                +---------+---------+
+                |                   |
+          +-----v-----+     +------v------+
+          |   Redis    |     |   Celery    |
+          |   :6379    |     |   Worker    |
+          +------------+     +------+------+
+                                    |
+                          +---------+---------+
+                          |                   |
+                    +-----v-----+     +------v------+
+                    |   MinIO   |     |  Supabase   |
+                    | (storage) |     | (metadata)  |
+                    +-----------+     +-------------+
+```
 
-## 📋 Requisitos
+## Stack
+
+- **Frontend:** Angular 19, Tailwind CSS, componentes standalone
+- **Backend:** FastAPI (Python 3.12), Celery 5.4, Redis 7
+- **IA:** OpenAI DALL-E 3
+- **Storage:** MinIO (imagenes) + Supabase (metadata)
+- **Infra:** Docker, Docker Swarm (produccion), Traefik (reverse proxy)
+
+## Requisitos
 
 - Node.js 20.x o 22.x LTS
-- npm 10.x o superior
+- Docker Desktop
 - Angular CLI 19
 
-## 🛠️ Instalación
+## Desarrollo local
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone <repository-url>
-   cd imagegen-ui
-   ```
+### 1. Levantar backend con Docker
 
-2. **Instalar dependencias:**
-   ```bash
-   npm install
-   ```
-
-3. **Configurar variables de entorno:**
-   - Editar `src/environments/environment.development.ts` para desarrollo
-   - Editar `src/environments/environment.ts` para producción
-
-## 🚀 Uso
-
-### Desarrollo
 ```bash
-# Iniciar servidor de desarrollo
-ng serve
+cd imagegen-ui
 
-# Abrir en navegador
+# Configurar variables de entorno
+cp env.example .env
+# Editar .env con tus API keys (OPENAI_API_KEY, SUPABASE_SERVICE_KEY)
+
+# Levantar redis + api + worker
+docker compose up -d
+```
+
+Esto levanta:
+- **API (FastAPI):** http://localhost:8081
+- **Celery Worker:** procesamiento en background
+- **Redis:** cola de mensajes
+
+### 2. Levantar frontend
+
+```bash
+npm install
 ng serve -o
 ```
 
-### Proxy (opcional, si hay problemas de CORS)
+Frontend disponible en http://localhost:3500
+
+### 3. Verificar que todo funcione
+
 ```bash
-# Crear archivo .env basado en env.example
-cp env.example .env
-
-# Iniciar proxy en terminal separado
-npm run proxy:dev
-
-# Iniciar Angular en otra terminal
-ng serve
+# Health check del API
+curl http://localhost:8081/api/health
 ```
 
-### Producción
+### Parar todo
+
 ```bash
-# Build de producción
-ng build --configuration production
-
-# Los archivos se generan en dist/imagegen-ui/
+docker compose down
 ```
 
-## 🔧 Configuración
-
-### Variables de entorno
-
-```typescript
-export const environment = {
-  production: false,
-  WEBHOOK_URL: "https://devwebhook.personalizzimo.com/webhook/47c53930-2d1d-4705-b727-befe937e88da",
-  USE_PROXY: false,
-  PROXY_PATH: "/api/generate-image",
-  REQUEST_TIMEOUT_MS: 60000,
-  MAX_PROMPT_LENGTH: 1200,
-};
-```
-
-### Proxy Node/Express
-
-Si necesitas usar el proxy para evitar CORS:
-
-1. **Instalar dependencias del proxy:**
-   ```bash
-   npm install express axios cors dotenv
-   npm install -D ts-node typescript @types/node @types/express
-   ```
-
-2. **Configurar variables:**
-   ```bash
-   # Crear .env basado en env.example
-   WEBHOOK_URL=https://devwebhook.personalizzimo.com/webhook/47c53930-2d1d-4705-b727-befe937e88da
-   PORT=8080
-   ```
-
-3. **Cambiar configuración:**
-   ```typescript
-   // En environment.development.ts
-   USE_PROXY: true
-   ```
-
-## 📁 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 src/
 ├── app/
-│   ├── app/
-│   │   ├── components/
-│   │   │   └── image-generator.component.ts    # Componente principal
-│   │   └── services/
-│   │       └── image.service.ts                # Servicio HTTP
-│   └── main.ts                                 # Bootstrap de la app
-├── environments/
-│   ├── environment.ts                          # Config producción
-│   └── environment.development.ts              # Config desarrollo
-└── styles.css                                  # Estilos globales Tailwind
+│   ├── core/services/
+│   │   ├── image.service.ts        # Servicio de generacion (API + polling)
+│   │   ├── gallery.service.ts      # Servicio de galeria
+│   │   └── theme.service.ts        # Servicio de tema
+│   ├── features/
+│   │   ├── generator/              # Componente principal de generacion
+│   │   └── legal/                  # Paginas legales
+│   ├── shared/layout/
+│   │   ├── header.component.ts     # Header con logo
+│   │   └── footer.component.ts     # Footer con links legales
+│   ├── ui/                         # Componentes UI reutilizables
+│   │   ├── alert/
+│   │   ├── button/
+│   │   ├── image-preview/
+│   │   ├── label/
+│   │   ├── spinner/
+│   │   └── textarea/
+│   ├── app.routes.ts               # Rutas (lazy loading)
+│   └── app.config.ts               # Configuracion de la app
+├── assets/icons/                   # Logos IAGentek
+├── environments/                   # Configuracion por entorno
+└── styles.css                      # Estilos globales Tailwind
+backend/
+├── app/
+│   ├── main.py                     # FastAPI endpoints
+│   ├── config.py                   # Variables de entorno
+│   ├── celery_app.py               # Configuracion Celery
+│   ├── tasks.py                    # Tasks de generacion
+│   ├── storage.py                  # Cliente MinIO (S3)
+│   └── database.py                 # Cliente Supabase
+└── requirements.txt
 ```
 
-## 🎨 Personalización
+## API Endpoints
 
-### Colores de marca
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | `/api/generate-image` | Encola generacion de imagen |
+| GET | `/api/jobs/{job_id}` | Estado del job (polling) |
+| GET | `/api/images?session_id=X` | Listar imagenes por sesion |
+| DELETE | `/api/images/{id}` | Eliminar imagen |
+| GET | `/api/health` | Health check |
 
-Los colores IAgentek están definidos en `tailwind.config.js`:
+## Variables de entorno
+
+```bash
+OPENAI_API_KEY=sk-...              # API key de OpenAI
+SUPABASE_URL=https://...           # URL de Supabase
+SUPABASE_SERVICE_KEY=eyJ...        # Service key de Supabase
+IMAGE_MODEL=dall-e-3               # Modelo de generacion
+IMAGE_SIZE=1024x1024               # Tamano de imagen
+IMAGE_QUALITY=standard             # Calidad (standard/hd)
+```
+
+## Despliegue (produccion)
+
+El proyecto se despliega en un VPS con Docker Swarm + Traefik:
+
+```bash
+# Build de imagenes
+docker build -f Dockerfile.frontend -t imagenstudio-frontend .
+docker build -f Dockerfile.backend -t imagenstudio-api .
+docker build -f Dockerfile.worker -t imagenstudio-worker .
+
+# Deploy con stack
+docker stack deploy -c deploy/imagenstudio.yaml imagenstudio
+```
+
+URL de produccion: `https://imagenstudio.iagentek.com.mx`
+
+## Colores de marca
 
 ```javascript
-theme: {
-  extend: {
-    colors: {
-      ianavy: "#0A1833",  // Azul marino
-      iagold: "#D4AF37",  // Dorado metálico
-    },
-  },
+// tailwind.config.js
+colors: {
+  ianavy: "#0A1833",  // Azul marino
+  iagold: "#D4AF37",  // Dorado metalico
 }
 ```
 
-### Validaciones
+## Autor
 
-- **Prompt requerido:** Mínimo 5 caracteres
-- **Límite máximo:** 1200 caracteres
-- **Timeout:** 60 segundos
-- **Contador visual:** Cambia de color según el uso (gris → amarillo → rojo)
-
-## 🔒 Seguridad
-
-- **Sanitización de URLs:** Usa `DomSanitizer` para URLs de blobs
-- **Gestión de memoria:** Libera automáticamente `ObjectURL`s
-- **Timeouts:** Evita requests colgados
-- **Validación de entrada:** Sanitiza prompts del usuario
-
-## 🚀 Despliegue
-
-### Estático (Netlify/Vercel)
-1. Hacer build: `ng build --configuration production`
-2. Subir carpeta `dist/imagegen-ui/` al servicio
-3. Configurar variables de entorno en el servicio
-
-### Con proxy
-1. Desplegar tanto Angular como el proxy Node
-2. Usar reverse proxy (Nginx) para `/api/generate-image`
-3. Configurar `USE_PROXY: true` en producción
-
-## 🐛 Solución de problemas
-
-### Error de CORS
-```bash
-# Activar proxy
-npm run proxy:dev
-# Cambiar USE_PROXY: true en environment
-```
-
-### Tailwind no funciona
-```bash
-# Verificar configuración
-tailwind.config.js y postcss.config.js
-```
-
-### Build falla
-```bash
-# Limpiar caché
-rm -rf node_modules dist
-npm install
-ng build
-```
-
-## 📝 API del webhook
-
-### Request
-```json
-POST https://devwebhook.personalizzimo.com/webhook/47c53930-2d1d-4705-b727-befe937e88da
-Content-Type: application/json
-
-{
-  "prompt": "Crea una imagen de un perro viajando hacia la luna con gafas de sol"
-}
-```
-
-### Response
-- **Content-Type:** `image/png`, `image/jpeg`, etc.
-- **Body:** Binario de la imagen generada
-
-## 🤝 Contribución
-
-1. Fork el proyecto
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -m 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
-
-## 👥 Autor
-
-Desarrollado con ❤️ usando Angular 19, Tailwind CSS y n8n.
+Desarrollado por IAGentek.
